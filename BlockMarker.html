@@ -1,0 +1,1666 @@
+<!doctype html>
+
+<html>
+
+    <head>
+
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+        <title>
+
+            blockMarker.html Rev.14.03.18
+
+        </title>
+        
+        <style type="text/css">
+            <!--
+                ul { margin: 0.2em; }
+                li { margin: 0.2em; }
+            -->
+        </style>
+
+        <script src="http://www.dl.kuis.kyoto-u.ac.jp/~manabe/jquery-2.0.3.js">
+
+        </script>
+
+        <script src="http://www.dl.kuis.kyoto-u.ac.jp/~manabe/base64.js">
+
+        </script>
+
+        <script language="JavaScript">
+
+            //////20////////30////////40////////50////////60////////70////////80
+
+            var BlockMarkerMode; // Global object
+
+            if(location.href.indexOf("?") < 0) {
+
+                location.href = location.href + "?mode=global";
+
+            } else if(location.href.indexOf("?mode=") < 0) {
+
+                location.href = location.href.replace("?", "?mode=global&");
+
+            } else {
+
+                BlockMarkerMode = document.URL.match(/\?mode=([^&]*)/)[1];
+
+                jQuery(window).ready(function() {
+
+                    // Display forms
+                    jQuery("#" + BlockMarkerMode).show();
+
+                });
+
+            }
+
+            var BlockMarker = window !== top ? // Global object
+                top.BlockMarker : new function (window, undefined) {
+
+                // Private variables /40////////50////////60////////70////////80
+                var rawString = undefined, rootBlock = undefined,
+                    myRangeCount    = 0, allMyRanges    = [],
+                    rangeArrayCount = 0, allRangeArrays = [],
+                    blockCount      = 0, allBlocks      = [],
+                                         allLists       = [];
+
+
+
+                // Public variables //40////////50////////60////////70////////80
+                // Reference only
+                this.allMyRanges    = allMyRanges;
+                this.allRangeArrays = allRangeArrays;
+                this.allBlocks      = allBlocks;
+
+
+
+                // (private) Prototype definitions ///////60////////70////////80
+                function MyRange(x, y, nessecity) {
+
+                    this.no = myRangeCount++;
+                    allMyRanges[this.no] = this;
+                    this.mandatory = nessecity;
+
+                    if (x <= y) {
+
+                        this.from = x;
+                        this.to = y;
+
+                    } else {
+
+                        this.from = y;
+                        this.to = x;
+
+                    }
+
+                }
+
+                MyRange.prototype = Object.create(Object.prototype);
+
+                MyRange.prototype.constructor = MyRange;
+
+                MyRange.prototype.cross = function(that) {
+
+                    return (this.from < that.from && that.from < this.to &&
+                        this.to < that.to) || (that.from < this.from &&
+                        this.from < that.to && that.to < this.to);
+
+                };
+
+                MyRange.prototype.dumpHTML = function() {
+
+                    var sumLen = 10, rawStr = rawString,
+                        from = this.from, to = this.to, len = to - from,
+                        result = "<span" +
+                        (this.mandatory ? ">" : " style='color:gray;'>");
+
+                    result += "(" + this.from + "..." + this.to + ")";
+
+                    if (2 * sumLen < len) {
+
+                        result +=
+                            escapeHTML(rawStr.substring(from, from + sumLen) ) +
+                            "<a href='#' onclick='return false;' title='" +
+                            escapeHTML(rawStr.substring(from, to) )
+                                .replace(/'/g, "\"") +
+                            "'>...</a>" +
+                            escapeHTML(rawStr.substring(to - sumLen, to) );
+
+                    } else {
+
+                        result += escapeHTML(rawStr.substring(from, to) );
+
+                    }
+
+                    result += "</span>";
+
+                    return result;
+
+                };
+
+                MyRange.prototype.dumpJSON = function() {
+
+                    return this;
+
+                };
+
+                MyRange.prototype.include = function(that) {
+
+                    return this.from <= that.from && that.to <= this.to;
+
+                };
+
+                MyRange.prototype.getOrder = function(x, y) {
+
+                    if (!x || !y) {
+
+                        return 0;
+
+                    } else {
+
+                        return (x.from === y.from) ?
+                            (x.to - y.to) : (x.from - y.from);
+
+                    }
+
+                };
+
+                MyRange.prototype.overlap = function(that) {
+
+                    return (this.from <= that.from && that.from <  this.to) ||
+                        (this.from <  that.to   && that.to   <= this.to) ||
+                        (that.from <= this.from && this.from <  that.to) ||
+                        (that.from <  this.to   && this.to   <= that.to);
+
+                };
+
+
+                function RangeArray() {
+
+                    var i;
+
+                    this.no = rangeArrayCount++;
+                    allRangeArrays[this.no] = this;
+
+                    for (i = 0; i < arguments.length; i++) {
+
+                        this.push(arguments[i]);
+
+                    }
+
+                    return this;
+
+                }
+
+                RangeArray.prototype = Object.create(Array.prototype);
+
+                RangeArray.prototype.constructor = RangeArray;
+
+                RangeArray.prototype.addHeadRange = function(from, to) {
+
+                    var newHeadingRange = new MyRange(from, to, true);
+
+                    if (this.block.getMandatoryContents()
+                        .every(function (content) {
+
+                        return !content.include(newHeadingRange);
+
+                    } ) ) {
+
+                        raiseWarning("No mandatory content of the block" +
+                            " includes it.");
+
+                    } else if (this.some(function(headingRange) {
+
+                        return headingRange.overlap(newHeadingRange);
+
+                    }) ){
+
+                        raiseWarning("It overlaps the already selected part" +
+                            " of the heading.");
+
+                    } else {
+
+                        this.push(newHeadingRange);
+
+                        if(this.block.headings.some(function(that) {
+
+                            return that.cross(this);
+
+                        }, this) ) {
+
+                            this.pop();
+                            raiseWarning("The heading crosses the other one" +
+                                " of the same block.");
+
+                        } else {
+
+                            this.sort();
+                            this.block.headings.sort();
+                            rootBlock.dumpHTML();
+
+                        }
+
+                    }
+
+                    return newHeadingRange;
+
+                };
+
+                RangeArray.prototype.addTransRange = function(from, to) {
+
+                    var newTransition = new MyRange(from, to, false);
+
+                    if (this.some(function(headingRange) {
+
+                        return headingRange.overlap(newTransition);
+
+                    }) ){
+
+                        raiseWarning("It overlaps the already selected part" +
+                            " of the heading.");
+
+                    } else {
+
+                        this.push(newTransition);
+                        this.sort();
+                        this.block.headings.sort();
+                        rootBlock.dumpHTML();
+
+                    }
+
+                    return newTransition;
+
+                };
+
+                RangeArray.prototype.cross = function(that){
+
+                    return this.overlap(that) && !this.include(that)
+                        && !that.include(this);
+
+                };
+
+                RangeArray.prototype.dumpHTML = function() {
+
+                    var result = "";
+
+                    this.forEach(function(range) {
+
+                        result += range.dumpHTML();
+
+                    });
+
+                    return result;
+
+                };
+
+                RangeArray.prototype.dumpJSON = function(tabs) {
+
+                    return this.map(function(range) {
+
+                        return range.dumpJSON();
+
+                    });
+
+                };
+
+                RangeArray.prototype.getOrder = function(x, y) {
+
+                    return MyRange.prototype.getOrder(x[0], y[0]);
+
+                };
+
+                RangeArray.prototype.include = function(included) {
+
+                    var including = this;
+
+                    return included.every(function (includedRange) {
+
+                        return including.some(function(includingRange) {
+
+                            return includingRange.include(includedRange);
+
+                        });
+
+                    });
+
+                };
+
+                RangeArray.prototype.overlap = function(that) {
+
+                    return this.some(function(a) {
+
+                        return that.some(function(b) {
+
+                            return a.overlap(b);
+
+                        });
+
+                    });
+
+                };
+
+                RangeArray.prototype.sort = function() {
+
+                    return Array.prototype.sort.call
+                        (this, MyRange.prototype.getOrder);
+
+                };
+
+
+                function RangeJag() {
+
+                    var i;
+
+                    for (i = 0; i < arguments.length; i++) {
+
+                        this.push(arguments[i]);
+
+                    }
+
+                    return this;
+
+                }
+
+                RangeJag.prototype = Object.create(Array.prototype);
+
+                RangeJag.prototype.constructor = RangeJag;
+
+                RangeJag.prototype.dumpJSON = function(tabs) {
+
+                    return this.map(function(rangeArray) {
+
+                        return rangeArray.dumpJSON();
+
+                    });
+
+                };
+
+                RangeJag.prototype.sort = function() {
+
+                    return Array.prototype.sort.call
+                        (this, RangeArray.prototype.getOrder);
+
+                };
+
+
+                function Block(from, to) {
+
+                    var initialContent = new MyRange(from, to, true);
+
+                    this.contents = new RangeArray(initialContent);
+                    this.children = new BlockArray();
+                    this.headings = new RangeJag();
+
+                    if (rootBlock) {
+
+                        if (rootBlock.getSelfAndDescendants()
+                            .some(function(descendant) {
+
+                            return this.cross(descendant);
+
+                        }, this) ) {
+
+                            console.log(this);
+                            raiseWarning
+                                ("The block will cross the other block.");
+                            return;
+
+                        } else {
+
+                            rootBlock.insert(this);
+
+                        }
+
+                    } else {
+
+                        this.parent = null;
+                        rootBlock = this;
+
+                    }
+
+                    this.no = blockCount++;
+                    allBlocks[this.no] = this;
+                    rootBlock.dumpHTML();
+
+                }
+                
+                Block.prototype = Object.create(Object.prototype);
+
+                Block.prototype.constructor = Block;
+
+                Block.prototype.addContent = function(from, to) {
+
+                    var newContent = new MyRange(from, to, true);
+
+                    if (this.contents.some(function(content) {
+
+
+                        return content.overlap(newContent);
+
+                    }) ){
+
+                        raiseWarning("It overlaps the already selected" +
+                            " content or transition.");
+
+                    } else {
+
+                        this.contents.push(newContent);
+
+                        if(allBlocks.some(function(that) {
+
+                            return that.parent && that.cross(this);
+
+                        }, this) ) {
+
+                            raiseWarning("The block crosses the other block.");
+
+                        } else {
+
+                            this.contents.sort();
+                            rootBlock.reInsert(this);
+
+                        }
+
+                    }
+
+                    return newContent;
+
+                };
+
+                Block.prototype.addHeading = function(from, to) {
+
+                    var newHeadingRange = new MyRange(from, to, true),
+                        newHeading = new RangeArray(newHeadingRange);
+
+                    if (this.getMandatoryContents().every(function(content) {
+
+                        return !content.include(newHeadingRange);
+
+                    } ) ) {
+
+                        raiseWarning("No mandatory content " +
+                            "of the block includes it.");
+
+                    } else if (this.headings.some(function(that) {
+
+                        return that.cross(newHeading);
+
+                    } ) ) {
+
+                        raiseWarning("The heading crosses the other one " +
+                            "of the same block.");
+
+                    } else {
+
+                        this.headings.push(newHeading);
+                        newHeading.block = this;
+                        this.headings.sort();
+                        rootBlock.dumpHTML();
+
+                    }
+
+                    return newHeading;
+
+                };
+
+                Block.prototype.addTransition = function(from, to) {
+
+                    var newTransition = new MyRange(from, to, false);
+
+                    if (this.contents.some(function(content) {
+
+                        return content.overlap(newTransition);
+
+                    }) ){
+
+                        raiseWarning("It overlaps the already selected " +
+                            "content or transition.");
+
+                    } else {
+
+                        this.contents.push(newTransition);
+                        this.contents.sort();
+                        // rootBlock.reInsert(this);
+                        rootBlock.dumpHTML();
+
+                    }
+
+                    return newTransition;
+
+                };
+
+                Block.prototype.cross = function(that) {
+
+                    return this.getMandatoryContents().
+                        cross(that.getMandatoryContents() );
+
+                };
+
+                Block.prototype.dumpHTML = function() {
+
+                    var result = "", no = this.no,
+                        ptrB = "BlockMarker.allBlocks[" + no + "]";
+                    
+                    result += "<li style='background-color: hsl(" +
+                        (360 * this.style / allLists.length) + ", 100%, 90%);" +
+                        "border-style: solid; border-width: thin;" +
+                        "border-color: gray;'>";
+                    // result += no + ". ";
+                    if(0 < no) result +=
+                        "<input type='checkbox' id='check" + no + "'>\n";
+                    result += "<small>"
+                    result += "<a href='#' onclick='" +
+                        ptrB + ".remove();" +
+                        "return false;'>[削除]</a>\n";
+                    result += dumpAnchorHTML("BlockMarker.batch", 
+                        ptrB + ".addContent", ptrB, "内容の追加");
+                    result += dumpAnchorHTML("BlockMarker.batch", 
+                        ptrB + ".addTransition", ptrB, "トランジションの追加");
+                    result += dumpAnchorHTML("BlockMarker.batch", 
+                        ptrB + ".addHeading", ptrB, "見出しの追加");
+                    result += "</small><br />";
+
+                    result += this.contents.map(function(range) {
+
+                        return range.dumpHTML() +
+                            "<sup><a href='#' onclick='" +
+                            "BlockMarker.allBlocks[" + no + "].removeContent" +
+                            "(BlockMarker.allMyRanges[" + range.no + "]);" +
+                            "return false;'>x</a></sup>";
+
+                    }, this).join(" ");
+
+                    result += "<ul style='color: #f00; font-size: smaller;'>";
+
+                    result += this.headings.map(function(array) {
+
+                        var result, ptrA =
+                            "BlockMarker.allRangeArrays[" + array.no + "]";
+
+                        result = "<li><small>"
+                        result += "<a href='#' onclick='" +
+                            ptrB + ".removeHeading" + "(" + ptrA + ");" +
+                            "return false;'>[見出しを削除]</a> ";
+                        result += dumpAnchorHTML("BlockMarker.batch",
+                            ptrA + ".addHeadRange", ptrA, "見出しの内容の追加");
+                        result += dumpAnchorHTML("BlockMarker.batch",
+                            ptrA + ".addTransRange", ptrA, "見出しのトランジションの追加");
+                        result += "</small><br />";
+                        result += array.map(function(range) {
+                        
+                            var ptrR = "BlockMarker.allMyRanges" +
+                                "[" + range.no + "]";
+
+                            return range.dumpHTML() +
+                                "<sup><a href='#' onclick='" +
+                                ptrB + ".removeHeadingRange" +
+                                "(" + [ptrA, ptrR].join(", ") + "); " +
+                                "return false;'>x</a></sup>";
+
+                        }, this).join(" ") + "</li>";
+                            
+                        return result;
+
+                    }, this).join(" ");
+
+                    result += "</ul>";
+                    result += "</li>";
+
+                    if (this.children.length > 0) {
+
+                        result += "<ul>";
+
+                        this.children.forEach(function(child) {
+
+                            result += child.dumpHTML();
+
+                        });
+
+                        result += "</ul>";
+
+                    }
+
+                    if (this.parent) {
+
+                        return result;
+
+                    } else {
+
+                        jQuery("#l", getListPane().document).html(
+                            "<input type='button' value='Refresh' " +
+                            "onclick='BlockMarker.getRootBlock()" +
+                            ".dumpHTML();' /><input type='button' " +
+                            "value='Check All' onclick='BlockMarker." +
+                            "checkAll();'><br />" + result +
+                            "<div style='height: 640px;'></div>");
+
+                    }
+
+                };
+
+                Block.prototype.dumpJSON = function(tabs) {
+
+                    var result = {
+
+                        "style":    this.style,
+                        "headings": this.headings.dumpJSON(),
+                        "contents": this.contents.dumpJSON(),
+                        "children": this.children.dumpJSON()
+
+                    };
+
+                    if (!this.parent) result.rawString = rawString;
+
+                    return result;
+
+                };
+
+                Block.prototype.getMandatoryContents = function() {
+
+                    var result = new RangeArray();
+
+                    this.contents.forEach(function(range) {
+
+                        if (range.mandatory) {
+
+                            result.push(range);
+
+                        }
+
+                    });
+
+                    return result;
+
+                };
+
+                Block.prototype.getOrder = function(x, y) {
+
+                    return MyRange.prototype
+                        .getOrder(x.contents[0], y.contents[0]);
+
+                };
+
+                Block.prototype.getSelfAndDescendants = function() {
+
+                    var result = new BlockArray();
+
+                    this.traverse(function(selfOrDescendant){
+
+                        result.push(selfOrDescendant);
+
+                    });
+
+                    return result;
+
+                };
+
+                Block.prototype.include = function(that) {
+
+                    return this.getMandatoryContents().
+                        include(that.getMandatoryContents() );
+
+                };
+
+                Block.prototype.insert = function(newChild) {
+
+                    if (this.include(newChild) ) {
+
+                        this.children.forEach(function (child){
+
+                            if (child.include(newChild) ) {
+
+                                child.insert(newChild);
+
+                            }
+
+                        });
+
+                        if (!newChild.parent) {
+
+                            var i;
+
+                            for (i = this.children.length - 1; 0 <= i; i--) {
+
+                                var child = this.children[i];
+
+                                if (newChild.include(child) ) {
+
+                                    this.children.splice(i, 1);
+                                    newChild.children.unshift(child);
+                                    child.parent = newChild;
+
+                                }
+
+                            }
+
+                            this.link(newChild);
+
+                        }
+
+                    } else {
+
+                        // console.log(parent);
+                        // console.log(block);
+                        raiseError("@Block insertion.");
+
+                    }
+
+                };
+
+                Block.prototype.link = function(child) {
+
+                    this.children.push(child);
+                    this.children.sort();
+                    child.parent = this;
+
+                };
+
+                Block.prototype.reInsert = function(block) {
+
+                    block.remove();
+                    this.insert(block);
+                    rootBlock.dumpHTML();
+
+                };
+
+                Block.prototype.remove = function() {
+
+                    if (this.no === 0) {
+
+                        raiseWarning("You cannot remove the root block.");
+
+                    } else {
+
+                        var i;
+
+                        for (i = this.children.length - 1; 0 <= i; i--) {
+
+                            this.parent.link(this.children[i].unlink() );
+
+                        };
+
+                        // this.parent.children.sort();
+                        this.unlink();
+
+                    }
+
+                    rootBlock.dumpHTML();
+
+                };
+
+                Block.prototype.removeContent = function(range) {
+
+                    if (this.no === 0) {
+
+                        raiseWarning("You cannot remove the root range.");
+
+                    } else {
+
+                        this.contents.splice(this.contents.indexOf(range), 1);
+
+                        if (this.contents[0]) {
+
+                            rootBlock.reInsert(this);
+
+                        } else {
+
+                            this.remove();
+
+                        }
+
+                    }
+
+                };
+
+                Block.prototype.removeHeading = function(array) {
+
+                    this.headings.splice(this.headings.indexOf(array), 1);
+                    rootBlock.dumpHTML();
+
+                };
+
+                Block.prototype.removeHeadingRange = function(array, range) {
+
+                    array.splice(array.indexOf(range), 1);
+
+                    if (array[0]) {
+
+                        rootBlock.dumpHTML();
+
+                    } else {
+
+                        this.removeHeading(array);
+
+                    }
+
+                };
+
+                Block.prototype.traverse = function(func) {
+
+                    // console.log(this.children);
+
+                    this.children.forEach(function(child) {
+
+                        child.traverse(func);
+
+                    } );
+
+                    func(this);
+
+                };
+
+                Block.prototype.unlink = function() {
+
+                    if(this.parent) {
+
+                        var children = this.parent.children;
+
+                        children.splice(children.indexOf(this), 1);
+                        this.parent = null;
+
+                    }
+
+                    return this;
+
+                };
+
+
+                function BlockArray() {
+
+                    var i;
+
+                    for (i = 0; i < arguments.length; i++) {
+
+                        this.push(arguments[i]);
+
+                    }
+
+                    return this;
+
+                }
+
+                BlockArray.prototype = Object.create(Array.prototype);
+
+                BlockArray.prototype.constructor = BlockArray;
+
+                BlockArray.prototype.dumpJSON = function(tabs) {
+
+                    return this.map(function(block) {
+
+                        return block.dumpJSON();
+
+                    });
+
+                };
+
+                BlockArray.prototype.setAsList = function() {
+
+                    var i;
+
+                    for(i = 0; true; i++) {
+
+                        if(!allLists[i] || allLists[i].every(function(block) {
+
+                            return block.style !== i ||
+                                this.indexOf(block) >= 0 ||
+                                (block.no !== 0 && !block.parent);
+
+                        }, this) ) {
+
+                            this.forEach(function(block) {
+
+                                block.style = i;
+
+                            });
+
+                            allLists[i] = this;
+                            break;
+
+                        }
+
+                    }
+
+                    rootBlock.dumpHTML();
+
+                };
+
+                BlockArray.prototype.sort = function() {
+
+                    return Array.prototype.sort.call
+                        (this, Block.prototype.getOrder);
+
+                };
+
+
+
+                // Private functions /40////////50////////60////////70////////80
+                function alert(message, category = "Alert") {
+
+                    top.alert("BlockMarker: " + category + ": " + message);
+
+                }
+
+                function chomp(range) {
+
+                    // Trim comments, CDATA sections and zero-length text node
+                    // at both ends of the range
+
+                    var node, nodes = getNodesIn(range);
+
+                    function isTextlikeNode(node) {
+
+                        return node.nodeType &&
+                            (node.nodeType === Node.CDATA_SECTION_NODE ||
+                            node.nodeType === Node.COMMENT_NODE);
+
+                    }
+
+                    if(range.endOffset === 0 &&
+                        isTextNode(range.endContainer) ) {
+
+                        range.setEndBefore(range.endContainer);
+
+                    }
+
+                    while( (node = nodes.shift() ) && isTextlikeNode(node) ) {
+
+                        range.setStartAfter(node);
+
+                    }
+
+                    while( (node = nodes.pop() ) && isTextlikeNode(node) ) {
+
+                        range.setEndBefore(node);
+
+                    }
+
+                    return range;
+
+                }
+
+                function dumpAnchorHTML(batcher, method, obj, text) {
+
+                    return "<a href='#' onclick='" +
+                        [batcher, "(", [method, obj].join(", "), ");"].join("") +
+                        "return false;'>[" + text + "]</a>\n";
+                
+                }
+
+                function escapeHTML(string) {
+
+                    return string.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+                }
+
+                function normalizeSpace(string) {
+
+                    return jQuery.trim(string.replace(/[^\n\S]+/g, " ").
+                        replace(/\s{2,}/g, "\n") );
+
+                }
+
+                function getContent(node, textOffset = 0, textLimit = null) {
+
+                    var text;
+                    
+                    if(!node) return null;
+
+                    switch(node.nodeName.toLowerCase() ) {
+
+                        case "#text":
+                        text = jQuery(node).text();
+                        textLimit = textLimit || text.length;
+                        return {"style": true, "script": true}
+                            [node.parentNode.nodeName.toLowerCase()] ? null :
+                            normalizeSpace(text.slice(textOffset, textLimit) );
+                        break;
+
+                        case "img":
+                        return "<IMG: " +
+                            (jQuery(node).attr("src") || "no-src") + ">";
+                        break;
+
+                        default:
+                        return null;
+
+                    }
+
+                }
+
+                function getContentIn(range) {
+
+                    var nodes = getNodesIn(range);
+
+                    if(nodes.length === 1) {
+
+                        return getContent(nodes[0],
+                            nodes.textOffset, nodes.textLimit);
+
+                    } else {
+
+                        var result = [];
+
+                        nodes.forEach(function(n, i, a){
+
+                            // console.log(n);
+
+                            var c;
+
+                            switch(i) {
+
+                                case 0:
+                                c = getContent(n, nodes.textOffset);
+                                break;
+
+                                case a.length - 1:
+                                c = getContent(n, 0, nodes.textLimit);
+                                break;
+
+                                default:
+                                c = getContent(n);
+
+                            }
+
+                            if(c) { // Neither undefined nor empty string
+
+                                result.push(c);
+
+                            }
+
+                            // console.log(result);
+
+                        });
+
+                        return result.join(" ");
+
+                    }
+
+                }
+
+                function getContentOffset(range) {
+
+                    var document = getOwner(range),
+                        offsetRange = document.createRange(), offsetGap,
+                        staCon = range.startContainer,
+                        staOff = range.startOffset;
+
+                    offsetRange.selectNode(document.body);
+                    offsetRange.setEnd(range.startContainer, range.startOffset);
+                    chomp(offsetRange);
+                    // console.log(offsetRange.endContainer);
+                    offsetGap = (isTextNode(staCon) && 0 < staOff && 
+                        !isEmpty(staCon.textContent.substring(0, staOff) ) ) ?
+                        0 : (getContentLength(offsetRange) ? 1 : 0);
+
+                    return getContentLength(offsetRange) + offsetGap;
+
+                }
+                
+                function getContentLength(range) {
+                
+                    return getContentIn(range).length;
+                
+                }
+
+                function getEntireContent(body) {
+
+                    var range = body.ownerDocument.createRange();
+
+                    range.selectNode(body);
+                    chomp(range);
+
+                    return getContentIn(range);
+
+                }
+
+                function getListPane() {
+
+                    return top.frames[1].frames[1];
+
+                }
+
+                function getMenuPane() {
+
+                    return top.frames[0];
+
+                }
+
+                function getNodesIn(range) {
+
+                    var result = [], rawNodes, firstNode, lastNode, width, i;
+
+                    result.context = range.commonAncestorContainer;
+                    result.nodeTest = "./descendant-or-self::node()";
+                    rawNodes = xPath(result.context, result.nodeTest);
+
+                    if(isTextNode(range.startContainer) ){
+
+                        firstNode = range.startContainer;
+                        result.textOffset = range.startOffset;
+
+                    } else {
+
+                        firstNode = range.startContainer
+                            .childNodes[range.startOffset];
+
+                    }
+
+                    if(isTextNode(range.endContainer) ){
+
+                        lastNode = range.endContainer;
+                        result.textLimit = range.endOffset;
+
+                    } else {
+
+                        lastNode = range.endOffset === 0 ?
+                        range.endContainer :
+                        xPath(range.endContainer.childNodes
+                            [range.endOffset - 1], result.nodeTest).pop();
+
+                    }
+
+                    result.offset = rawNodes.indexOf(firstNode);
+                    width = rawNodes.indexOf(lastNode) - result.offset + 1;
+
+                    for(i = 0; i < width; i++) {
+
+                        result.push(rawNodes[result.offset + i]);
+
+                    }
+
+                    return result;
+
+                }
+
+                function getOwner(range) {
+
+                    return range.commonAncestorContainer.ownerDocument;
+
+                }
+
+                function getRanges() {
+                
+                    var i, result = [],
+                        selection = getResourcePane().getSelection();
+                    
+                    for(i = 0; i < selection.rangeCount; i++) {
+                    
+                        var range = selection.getRangeAt(i);
+                        
+                        chomp(range);
+                        
+                        if (!range.isCollapsed) result.push(range);
+                                            
+                    }
+                    
+                    return result;
+                
+                }
+                
+                function getResourcePane() {
+
+                    return top.frames[1].frames[0];
+
+                }
+
+                function getSource() {
+
+                    return getResourcePane().document.documentElement.outerHTML;
+
+                }
+
+                function isEmpty(string) {
+                
+                    return /^\s*$/.test(string);
+                
+                }
+                
+                function isTextNode(node) {
+
+                    return node.nodeType && node.nodeType === Node.TEXT_NODE;
+
+                }
+
+                function raiseError(message) {
+
+                    var note = jQuery("#f_note", getMenuPane().document);
+
+                    jQuery("#f_has_matter", getMenuPane().document)
+                        .attr("checked", true);
+                    jQuery("#f_matter", getMenuPane().document)
+                        .val('System bug. Please write the note.');
+                    note.val(message + ";" + note.val() );
+                    alert(message, "Error");
+
+                }
+
+                function raiseWarning(message) {
+
+                    alert(message, "Warning");
+
+                }
+
+                function trimContentBody(context, exp) {
+
+                    var cnt = 0,
+                        exp = decodeURIComponent(exp.split("+").join("%20") );
+
+                    function setHasContentBody(node) {
+
+                        node.HasContentBody = true;
+
+                        if (node.parentNode && !node.parentNode.HasContentBody)
+                            setHasContentBody(node.parentNode);
+
+                    }
+
+                    // console.log([context, exp]);
+
+                    xPath(context, exp).forEach(function(content) {
+
+                        setHasContentBody(content);
+                        cnt += 1;
+
+                    });
+
+                    xPath(context, ".//node()").forEach(function(node) {
+
+                        if(!node.HasContentBody)
+                            node.parentNode.removeChild(node);
+
+                    });
+
+                    return cnt;
+
+                }
+
+                function xPath(context, exp) {
+
+                    var focusing, result = [],
+                        nodeIter = (context.ownerDocument || context).evaluate(
+                        exp, context, null,
+                        XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+
+                    while(focusing = nodeIter.iterateNext() ) {
+
+                        result.push(focusing);
+
+                    }
+
+                    return result;
+
+                }
+
+
+
+                // Public functions //40////////50////////60////////70////////80
+                this.apply = function(range, method, obj) {
+                
+                    var from = getContentOffset(range),
+                        len = getContentLength(range),
+                        first = rawString.substring(from, from + 1);
+                        
+                    if(first && isEmpty(first) ) from++;
+                            
+                    if(!isEmpty(rawString.substring(from, from + len) ) ) {
+                    
+                        return method.apply(obj, [from, from + len]);
+                        
+                    } else {
+                    
+                        return null;
+                    
+                    }
+                
+                };
+                
+                this.batch = function(method, obj) {
+                
+                    getRanges().forEach(function(range) {
+                    
+                        BlockMarker.apply(range, method, obj);
+                    
+                    });
+                
+                };
+                
+                this.batchTable = function() {
+                
+                    var rows = new BlockArray();
+                
+                    getRanges().forEach(function(range) {
+                    
+                        var maybeTr = range.startContainer,
+                            trRange = new Range();
+                            
+                        if(maybeTr.nodeName.toLowerCase() === "tr") {
+                            
+                            var block;
+                            
+                            trRange.selectNode(maybeTr);
+                            block = BlockMarker.apply(trRange,
+                                BlockMarker.createBlock, BlockMarker);
+
+                            if(block) {
+                            
+                                rows.push(block);
+                                BlockMarker.apply(range,
+                                    block.addHeading, block);
+                                    
+                            }
+                                
+                        }
+                    
+                    });
+                    
+                    rows.setAsList();
+                
+                };
+                                
+                this.changeMode = function(string) {
+
+                    return top.location.href.
+                        replace(/(\?mode=)[^&]+/, "$1" + string);
+
+                };
+
+                this.checkAll = function() {
+                
+                    var body = getListPane().document.body;
+                    
+                    jQuery("input[type='checkBox']", body).attr("checked", true);
+                
+                };
+                
+                this.createBlock = function(from, to) {
+                
+                    return new Block(from, to, true);
+                
+                };
+                
+                this.getRootBlock = function() {
+                
+                    return rootBlock;
+                
+                };
+                
+                this.initialize = function() {
+
+                    switch(-1) {
+
+                        case (location.href.search(/&url=/) ):
+                        raiseError("No URL.");
+                        return;
+
+                        case (location.href.search(/&x=/) ):
+                        raiseError("No XPath.");
+                        return;
+
+                        case (location.href.search(/&name=/) ):
+                        raiseError("No file name.");
+                        return;
+
+                    }
+
+                    getResourcePane().location.href =
+                        location.href.match(/&url=([^&]*)/)[1];
+
+                    setTimeout(function() {
+
+                        jQuery(getResourcePane() ).on("beforeunload",
+                            function() {
+
+                            return("BlockMarker: Warning:\n" +
+                                "You are leaving the page. Are you sure?");
+
+                        });
+
+                        jQuery(getResourcePane() ).load(function() {
+
+                            var body = getResourcePane().document.body;
+
+                            if(trimContentBody(body,
+                                location.href.match(/&x=([^&]*)/)[1]) ) {
+
+                                rawString = // Private valiable
+                                    getEntireContent(body);
+                                // console.log(rawString);
+                                getMenuPane().location.href =
+                                    BlockMarker.changeMode("m");
+                                    
+                                getListPane().document.addEventListener
+                                    ('keydown', function (e) {
+                                    
+                                    switch(e.keyCode) {
+                                    
+                                        case 76: // l -> Set as a list
+                                        BlockMarker.setAsList();
+                                        break;
+                                        
+                                    }
+                                                                        
+                                });
+                                
+                                getResourcePane().document.addEventListener
+                                    ('keydown', function (e) {
+                                    
+                                    switch(e.keyCode) {
+                                    
+                                        case 66: // b -> Mark new blocks
+                                        BlockMarker.batch
+                                            (BlockMarker.createBlock,
+                                            BlockMarker);
+                                        break;
+                                        
+                                        case 72: // h -> Add headings
+                                                 //      into the last block
+                                        var target = BlockMarker.allBlocks
+                                            [BlockMarker.allBlocks.length - 1];
+                                        
+                                        BlockMarker.batch
+                                            (target.addHeading, target);
+                                        break;
+                                    
+                                        case 84: // t -> Mark a flat table
+                                        BlockMarker.batchTable();
+                                        break;
+                                        
+                                    }
+
+                                });
+
+                                new BlockArray(new Block(0, rawString.length) )
+                                    .setAsList(); // Initialize
+
+                            } else {
+
+                                raiseError("XPath no match.");
+
+                            }
+
+                        });
+
+                    }, 0); // Pass to load new location
+
+
+                };
+
+                this.saveJSON = function(node) {
+                
+                    if(!allBlocks.every(function(b){
+                        // Check block w/o style
+                    
+                        return (b === allBlocks[0]) || // Top-level.
+                            !b.parent || // Already unlinked.
+                            b.style !== undefined; // The style has been marked.
+                    
+                    } ) ) {
+                    
+                        raiseWarning("Please mark every list even if " +
+                            "it is composed from only one block.");
+                            
+                        return false;
+                    
+                    } else if(!allBlocks.every(function(b){ 
+                        // Check block w/o heading
+                    
+                        return (b === allBlocks[0]) || // Top-level.
+                            !b.parent || // Already unlinked.
+                            (0 < b.headings.length); // The heading has been marked.
+                    
+                    } ) ) {
+                    
+                        raiseWarning("Please do not mark blocks " +
+                            "without their headings.");
+                    
+                        return false;
+                    
+                    } else {
+                    
+                        var document = getMenuPane().document,
+                            hasMatter =
+                                document.getElementById("f_has_matter").checked,
+                            jsonObj = rootBlock.dumpJSON(), json, b64, fileName;
+                    
+                        if(hasMatter) {
+
+                            jsonObj.hasMatter = hasMatter;
+                            jsonObj.matter =
+                                jQuery("#f_matter > option:selected",
+                                document.documentElement).text();
+
+                        }
+
+                        jsonObj.note = document.getElementById("f_note").value;
+                        jsonObj.rawString = rawString;
+                        json = JSON.stringify(jsonObj,
+                            ["from", "to", "mandatory", "style", "headings",
+                            "contents", "children", "rawString", "hasMatter",
+                            "matter", "note"], "    ");
+                        b64 = base64.encode(json, 1);
+                        fileName = (matcher = top.location.href.
+                            match(/&name=([^&]+)/) ) ? matcher[1] : "Unnamed";
+                        jQuery(node).
+                            attr("href", "data:text/json;base64," + b64).
+                            attr("download", fileName);
+                        jQuery(getResourcePane() ).off("beforeunload");
+                        
+                        return true;
+
+                    }                       
+                    
+                };
+
+                this.setAsList = function() {
+                
+                    var i, checkBox,
+                        document = getListPane().document,
+                        blockArray = new BlockArray();
+                        
+                    for(i = 0; i < allBlocks.length; i++) {
+                    
+                        if( (checkBox = document.getElementById("check" + i) )
+                            && checkBox.checked)
+                            blockArray.push(allBlocks[i]);
+                    
+                    }
+                    
+                    if(0 < blockArray.length) blockArray.setAsList();
+                
+                }
+                
+            }(top);
+
+        </script>
+
+    </head>
+
+    <script language="JavaScript"> // Frame construction
+
+        if(BlockMarkerMode === "global") {
+
+            document.write("" +
+                "<frameset rows='64px, *'>" +
+                "    <frame src='" + BlockMarker.changeMode("l") + "'>" +
+                "    <frame src='" + BlockMarker.changeMode("coframe") + "'>" +
+                "</frameset>");
+
+        }
+
+        if(BlockMarkerMode === "coframe") {
+
+            document.write("" +
+                "<frameset cols='50%, *'>" +
+                "    <frame src='" + BlockMarker.changeMode("l") + "'>" +
+                "    <frame src='" + BlockMarker.changeMode("l") + "'>" +
+                "</frameset>");
+            BlockMarker.initialize();
+
+        }
+
+    </script>
+
+    <body>
+
+        <div id="m" style="display: none; background-color: lightgray;">
+
+            <a id="save" href="#" onclick="return BlockMarker.saveJSON(this);">
+
+                Save JSON
+
+            </a>
+
+            <input type="button" value="Mark a new Block (b)"
+                onclick="BlockMarker.batch
+                (BlockMarker.createBlock, BlockMarker);" />
+
+            <input type="button" value="Mark as a List (l)"
+                onclick="BlockMarker.setAsList();" />
+
+            <input type="checkbox" id="f_has_matter">
+
+            There are matters
+
+            <select id="f_matter"
+                onclick="jQuery('#f_has_matter').attr('checked', true);">
+
+                <option selected>Select the matter.</option>
+
+                <option>Too long contents.</option>
+
+                <option>Too long loading.</option>
+
+                <!-- <option>No content.</option> -->
+
+                <!-- <option>Framed page.</option> -->
+
+                <!-- <option>Redirecting page.</option> -->
+
+                <option>Broken layout.</option>
+
+                <option>Effects (like animations).</option>
+
+                <option>System bug. Please write the note.</option>
+
+                <option>Others. Please write the note.</option>
+
+            </select>
+
+            <br />
+
+            Note:
+
+            <input type="text" id="f_note" size="120" />
+
+        </div>
+
+        <div id="l" style="display: none;">
+
+            Now Loading...
+
+        </div>
+
+    </body>
+
+</html>

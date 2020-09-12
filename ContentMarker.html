@@ -1,0 +1,628 @@
+<!doctype html>
+
+<html>
+
+    <head>
+
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+        <title>
+
+            contentMarker.html Rev.14.5.1
+
+        </title>
+
+        <script src="http://www.dl.kuis.kyoto-u.ac.jp/~manabe/jquery-2.0.3.js">
+
+        </script>
+
+        <script src="http://www.dl.kuis.kyoto-u.ac.jp/~manabe/base64.js">
+
+        </script>
+
+        <script language="JavaScript">
+
+            //////20////////30////////40////////50////////60////////70////////80
+
+            var ContentMarkerMode; // Global object
+            
+            // http://stackoverflow.com/questions/710586/json-stringify-bizarreness
+            delete Array.prototype.toJSON;
+    
+            if(location.href.indexOf("?") < 0) {
+
+                location.href = location.href + "?mode=global";
+
+            } else if(location.href.indexOf("?mode=") < 0) {
+
+                location.href = location.href.replace("?", "?mode=global&");
+
+            } else {
+
+                ContentMarkerMode = document.URL.match(/\?mode=([^&]*)/)[1];
+
+                jQuery(window).ready(function() {
+
+                    // Display forms
+                    jQuery("#" + ContentMarkerMode).show();
+
+                });
+
+            }
+
+            var ContentMarker = // Global object
+                window !== top ? top.ContentMarker : new function () {
+
+                // Private variables /40////////50////////60////////70////////80
+                var rangeStack = [];
+
+
+                // Public variables //40////////50////////60////////70////////80
+
+
+
+                // (private) Prototype definitions ///////60////////70////////80
+
+
+
+                // Private functions /40////////50////////60////////70////////80
+                function chomp(range) {
+
+                    // Trim comments, CDATA sections and zero-length text node
+                    // at both ends of the range
+
+                    var node, nodes = getNodesIn(range);
+
+                    while( (node = nodes.shift() ) && isTextlikeNode(node) ) {
+
+                        range.setStartAfter(node);
+
+                    }
+
+                    while( (node = nodes.pop() ) && isTextlikeNode(node) ) {
+
+                        range.setEndBefore(node);
+
+                    }
+
+                    if(range.endOffset === 0 &&
+                        isTextNode(range.endContainer) ) {
+
+                        range.setEndBefore(range.endContainer);
+
+                    }
+
+                    return range;
+
+                }
+
+                function dumpXPath(range) {
+
+                    var document = ownerDocument(range),
+                        nodes = getNodesIn(range), offset = nodes.offset;
+
+                    return getXPath(nodes.context) + "/" + nodes.nodeTest +
+                        (offset ? "[" + (offset + 1) + " <= position()]" : "") +
+                        "[position() <= " + nodes.length + "]";
+
+                }
+
+                function normalizeSpace(string) {
+
+                    return jQuery.trim(string.replace(/[^\n\S]+/g, " ").
+                        replace(/\s{2,}/g, "\n") );
+
+                }
+
+                function getContent(node, textOffset = 0, textLimit = null) {
+
+                    var text;
+                    
+                    // console.log(node);
+
+                    switch(node.nodeName.toLowerCase() ) {
+
+                        case "#text":
+                        text = jQuery(node).text();
+                        textLimit = textLimit || text.length;
+                        return {"style": true, "script": true}
+                            [node.parentNode.nodeName.toLowerCase()] ? null :
+                            normalizeSpace(text.slice(textOffset, textLimit) );
+                        break;
+
+                        case "img":
+                        return "<IMG: " +
+                            (jQuery(node).attr("src") || "no-src") + ">";
+                        break;
+
+                        default:
+                        return null;
+
+                    }
+
+                }
+
+                function getContentIn(range) {
+
+                    var nodes = getNodesIn(range);
+                    
+                    // console.log(nodes);
+
+                    if(nodes.length === 1) {
+
+                        return getContent(nodes[0],
+                            nodes.textOffset, nodes.textLimit);
+
+                    } else {
+
+                        var result = [];
+
+                        nodes.forEach(function(n, i, a){
+
+                            // console.log(n);
+
+                            var c;
+
+                            switch(i) {
+
+                                case 0:
+                                c = getContent(n, nodes.textOffset);
+                                break;
+
+                                case a.length - 1:
+                                c = getContent(n, 0, nodes.textLimit);
+                                break;
+
+                                default:
+                                c = getContent(n);
+
+                            }
+
+                            if(c) { // Neither undefined nor empty string
+
+                                result.push(c);
+
+                            }
+
+                            // console.log(result);
+
+                        });
+
+                        return result.join(" ");
+
+                    }
+
+                }
+
+                function getContentOffset(range) {
+
+                    var document = ownerDocument(range),
+                        offsetRange = document.createRange(), result;
+
+                    offsetRange.selectNode(document.body);
+                    offsetRange.setEnd(range.startContainer, range.startOffset);
+                    chomp(offsetRange);
+                    result = getContentIn(offsetRange).length;
+
+                    return (0 < result ? result + 1 : 0); // Supply a whitespace
+
+                }
+
+                function getEntireContent(body) {
+
+                    var range = body.ownerDocument.createRange();
+
+                    range.selectNode(body);
+                    chomp(range);
+
+                    return getContentIn(range);
+
+                }
+
+                function getMenuPane() {
+
+                    return top.frames[0];
+
+                }
+
+                function getNodesIn(range) {
+
+                    var result = [], rawNodes, firstNode, lastNode, width, i;
+
+                    // console.log(range);
+                    
+                    result.context = range.commonAncestorContainer;
+                    result.nodeTest = "./descendant-or-self::node()";
+                    rawNodes = xPath(result.context, result.nodeTest);
+
+                    if(isTextNode(range.startContainer) ){
+
+                        firstNode = range.startContainer;
+                        result.textOffset = range.startOffset;
+
+                    } else {
+
+                        firstNode = range.startContainer
+                            .childNodes[range.startOffset];
+
+                    }
+
+                    if(isTextNode(range.endContainer) ){
+
+                        lastNode = range.endContainer;
+                        result.textLimit = range.endOffset;
+
+                    } else {
+
+                        lastNode = range.endOffset === 0 ?
+                        range.endContainer :
+                        xPath(range.endContainer.childNodes
+                            [range.endOffset - 1], result.nodeTest).pop();
+
+                    }
+                    
+                    // console.log([firstNode, rawNodes]);
+
+                    result.offset = rawNodes.indexOf(firstNode);
+                    width = rawNodes.indexOf(lastNode) - result.offset + 1;
+
+                    for(i = 0; i < width; i++) {
+
+                        result.push(rawNodes[result.offset + i]);
+
+                    }
+
+                    return result;
+
+                }
+
+                function getResourcePane() {
+
+                    return top.frames[1];
+
+                }
+
+                function getSource() {
+
+                    return getResourcePane().document.documentElement.outerHTML;
+
+                }
+
+                function getXPath(node) {
+
+                    var lowerName;
+
+                    function noSameNameSibling(node) {
+
+                        return 0 === jQuery(node).siblings(node.nodeName).length;
+
+                    }
+
+                    function countSameNamedPrecedingSiblings(node) {
+
+                        return jQuery(node).prevAll(node.nodeName).length;
+
+                    }
+
+                    switch(node.nodeType) {
+
+                        case Node.TEXT_NODE:
+                        lowerName = "text()";
+                        // break;
+
+                        case Node.ELEMENT_NODE:
+                        lowerName = lowerName || node.nodeName.toLowerCase();
+                        return getXPath(node.parentNode) + "/" + lowerName +
+                            (noSameNameSibling(node) ? "" : "[" +
+                            (countSameNamedPrecedingSiblings(node) + 1) + "]");
+                        break;
+
+                        case Node.DOCUMENT_NODE:
+                        return "";
+                        break;
+
+                        default:
+                        return null;
+                        break;
+
+                    }
+
+                }
+
+                function isTextlikeNode(node) {
+
+                    return node.nodeType &&
+                        (node.nodeType === Node.CDATA_SECTION_NODE ||
+                        node.nodeType === Node.COMMENT_NODE);
+
+                }
+
+                function isTextNode(node) {
+
+                    return node.nodeType && node.nodeType === Node.TEXT_NODE;
+
+                }
+
+                function ownerDocument(range) {
+
+                    return range.commonAncestorContainer.ownerDocument;
+
+                }
+
+                function xPath(context, xPath) {
+
+                    var focusing, result = [],
+                        nodeIter = (context.ownerDocument || context).evaluate(
+                        xPath, context, null,
+                        XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
+
+                    while(focusing = nodeIter.iterateNext() ) {
+
+                        result.push(focusing);
+
+                    }
+
+                    return result;
+
+                }
+
+                // Public functions //40////////50////////60////////70////////80
+                this.clearStack = function() {
+
+                    rangeStack = [];
+                    jQuery("#f_stored", getMenuPane().document.documentElement)
+                        .text(rangeStack.length);
+
+
+                };
+                
+                this.mode = function(string) {
+
+                    return top.location.href.
+                        replace(/(\?mode=)[^&]+/, "$1" + string);
+
+                };
+
+                this.openURL = function(url) {
+
+                    getResourcePane().location.href = url;
+                    getMenuPane().location.href = ContentMarker.mode("m");
+
+                    setTimeout(function() {
+
+                        jQuery(getResourcePane() ).ready(function() {
+
+                            jQuery(getResourcePane() )
+                                .on("beforeunload", function() {
+
+                                return("You are leaving the working page.\n" +
+                                    "Are you sure?");
+
+                            });
+                            
+                            jQuery(getResourcePane() ).keydown(function(e) {
+                             
+                                switch(e.keyCode) {
+                                
+                                    case 83: // s -> Save JSON
+                                    ContentMarker.saveJSON();
+                                    break;
+                                    
+                                }
+                             
+                            });
+
+                        });
+                        
+                    }, 0); // Pass to load new location
+
+                };
+
+                this.openURLInit = function() {
+
+                    var matcher;
+
+                    if(matcher = location.href.match(/&url=([^&]+)/) ) {
+
+                        ContentMarker.openURL(matcher[1]);
+
+                    }
+
+                };
+
+                this.saveJSON = function(node) {
+
+                    var i = 0, xPathes = [], myRanges = [], fragmentStrings = [],
+                        document = getResourcePane().document,
+                        selection = getResourcePane().getSelection(),
+                        hasMatter = jQuery("#f_has_matter",
+                            getMenuPane().document.documentElement).prop("checked");
+
+                    ContentMarker.stackRanges();
+
+                    rangeStack.forEach(function(range) {
+
+                        var content, offset;
+
+                        chomp(range);
+                        content = getContentIn(range);
+                        offset = getContentOffset(range);
+                        xPathes.push(dumpXPath(range) );
+                        myRanges.push({"from": offset,
+                            "to": offset + content.length});
+                        fragmentStrings.push(content);
+
+                    });
+
+                    if(hasMatter || 0 < xPathes.length) {
+
+                        var result = {}, json, b64, matcher, fileName;
+
+                        result.xPath = xPathes.join("|");
+                        result.myRanges = myRanges;
+                        result.fragmentStrings = fragmentStrings;
+                        result.rawString = document.body ?
+                            getEntireContent(document.body) : "";
+                        result.rawSource = getSource();
+
+                        if(hasMatter) {
+
+                            result.hasMatter = hasMatter;
+                            result.matter = jQuery("#f_matter > option:selected",
+                                getMenuPane().document.documentElement).text();
+
+                        }
+
+                        result.note = jQuery("#f_note", getMenuPane().
+                            document.documentElement).val();
+                        json = JSON.stringify(result,
+                            ["xPath", "myRanges", "from", "to",
+                            "fragmentStrings", "rawString", "rawSource",
+                            "hasMatter", "matter", "note"], "    ");
+                        b64 = base64.encode(json, 1);
+                        fileName = (matcher = top.location.href.
+                            match(/&name=([^&]+)/) ) ? matcher[1] : "Unnamed";
+                        jQuery(node).
+                            attr("href", "data:text/json;base64," + b64).
+                            attr("download", fileName);
+                        jQuery(getResourcePane() ).off("beforeunload");
+                        ContentMarker.clearStack();
+
+                    } else {
+
+                        alert("No selection.");
+
+                    }
+
+                };
+
+                this.stackRanges = function() {
+
+                    var range, i = 0,
+                        selection = getResourcePane().getSelection();
+
+                    for(; i < selection.rangeCount; i++) {
+
+                        range = selection.getRangeAt(i);
+
+                        if(range.collapsed) {
+
+                            continue;
+
+                        } else {
+
+                            rangeStack.push(range);
+                            jQuery("#f_stored",
+                                getMenuPane().document.documentElement)
+                                .text(rangeStack.length);
+
+                        }
+
+                    }
+
+                };
+                
+            };
+
+        </script>
+
+    </head>
+
+    <script language="JavaScript"> // Frame construction
+
+        if(ContentMarkerMode === "global") {
+
+            document.write("" +
+                "<frameset rows='5%, *'>" +
+                "    <frame id='m' src='" + ContentMarker.mode("init_m") + "'>" +
+                "    <frame id='r' src='" + ContentMarker.mode("empty") + "'>" +
+                "</frameset>");
+            ContentMarker.openURLInit();
+
+        }
+        
+    </script>
+
+    <body>
+
+        <div id="init_m" style="display: none;">
+
+            <form>
+
+                <input type="text" id="f_url" size="50" />
+                <input type="button" value="Open URL"
+                    onclick="ContentMarker.openURL(jQuery('#f_url').val() )" />
+
+            </form>
+
+        </div>
+
+        <div id="m" style="display: none; background-color: lightgray;">
+
+            <a id="save" href="#" onclick="ContentMarker.saveJSON(this);">
+
+                Save JSON
+
+            </a>
+
+            /
+
+            <a id="store" href="#" onclick="ContentMarker.stackRanges();">
+
+                Stack selection
+
+            </a>
+
+            (
+
+            <span id="f_stored">0</span>
+
+            ranges stacked.
+
+            <a id="store" href="#" onclick="ContentMarker.clearStack();">
+
+                Clear?
+
+            </a>
+
+            ) /
+
+            <input type="checkbox" id="f_has_matter">
+
+            Hard to select some (or all) contents ->
+
+            <select id="f_matter"
+                onclick="jQuery('#f_has_matter').attr('checked', true);">
+
+                <option selected>Select the matter.</option>
+
+                <!-- <option>Too long contents.</option> -->
+
+                <option>Too long loading.</option>
+
+                <option>No content.</option>
+
+                <option>Framed page.</option>
+
+                <option>Redirecting page.</option>
+
+                <option>Broken layout.</option>
+
+                <option>Effects (like animations).</option>
+
+                <option>System bug. Please write the note.</option>
+
+                <option>Others. Please write the note.</option>
+
+            </select>
+
+            <br />
+
+            Note:
+            <input type="text" id="f_note" size="120" />
+
+        </div>
+
+    </body>
+
+</html>

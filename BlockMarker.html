@@ -11,7 +11,7 @@
             blockMarker.html Rev.14.03.18
 
         </title>
-        
+
         <style type="text/css">
             <!--
                 ul { margin: 0.2em; }
@@ -19,11 +19,7 @@
             -->
         </style>
 
-        <script src="http://www.dl.kuis.kyoto-u.ac.jp/~manabe/jquery-2.0.3.js">
-
-        </script>
-
-        <script src="http://www.dl.kuis.kyoto-u.ac.jp/~manabe/base64.js">
+        <script src="https://tmanabe.github.io/HEPS-annotation-tools/jquery.js">
 
         </script>
 
@@ -424,7 +420,7 @@
                     rootBlock.dumpHTML();
 
                 }
-                
+
                 Block.prototype = Object.create(Object.prototype);
 
                 Block.prototype.constructor = Block;
@@ -541,7 +537,7 @@
 
                     var result = "", no = this.no,
                         ptrB = "BlockMarker.allBlocks[" + no + "]";
-                    
+
                     result += "<li style='background-color: hsl(" +
                         (360 * this.style / allLists.length) + ", 100%, 90%);" +
                         "border-style: solid; border-width: thin;" +
@@ -553,11 +549,11 @@
                     result += "<a href='#' onclick='" +
                         ptrB + ".remove();" +
                         "return false;'>[削除]</a>\n";
-                    result += dumpAnchorHTML("BlockMarker.batch", 
+                    result += dumpAnchorHTML("BlockMarker.batch",
                         ptrB + ".addContent", ptrB, "内容の追加");
-                    result += dumpAnchorHTML("BlockMarker.batch", 
+                    result += dumpAnchorHTML("BlockMarker.batch",
                         ptrB + ".addTransition", ptrB, "トランジションの追加");
-                    result += dumpAnchorHTML("BlockMarker.batch", 
+                    result += dumpAnchorHTML("BlockMarker.batch",
                         ptrB + ".addHeading", ptrB, "見出しの追加");
                     result += "</small><br />";
 
@@ -588,7 +584,7 @@
                             ptrA + ".addTransRange", ptrA, "見出しのトランジションの追加");
                         result += "</small><br />";
                         result += array.map(function(range) {
-                        
+
                             var ptrR = "BlockMarker.allMyRanges" +
                                 "[" + range.no + "]";
 
@@ -599,7 +595,7 @@
                                 "return false;'>x</a></sup>";
 
                         }, this).join(" ") + "</li>";
-                            
+
                         return result;
 
                     }, this).join(" ");
@@ -984,7 +980,7 @@
                     return "<a href='#' onclick='" +
                         [batcher, "(", [method, obj].join(", "), ");"].join("") +
                         "return false;'>[" + text + "]</a>\n";
-                
+
                 }
 
                 function escapeHTML(string) {
@@ -1003,7 +999,7 @@
                 function getContent(node, textOffset = 0, textLimit = null) {
 
                     var text;
-                    
+
                     if(!node) return null;
 
                     switch(node.nodeName.toLowerCase() ) {
@@ -1089,18 +1085,18 @@
                     offsetRange.setEnd(range.startContainer, range.startOffset);
                     chomp(offsetRange);
                     // console.log(offsetRange.endContainer);
-                    offsetGap = (isTextNode(staCon) && 0 < staOff && 
+                    offsetGap = (isTextNode(staCon) && 0 < staOff &&
                         !isEmpty(staCon.textContent.substring(0, staOff) ) ) ?
                         0 : (getContentLength(offsetRange) ? 1 : 0);
 
                     return getContentLength(offsetRange) + offsetGap;
 
                 }
-                
+
                 function getContentLength(range) {
-                
+
                     return getContentIn(range).length;
-                
+
                 }
 
                 function getEntireContent(body) {
@@ -1180,24 +1176,24 @@
                 }
 
                 function getRanges() {
-                
+
                     var i, result = [],
                         selection = getResourcePane().getSelection();
-                    
+
                     for(i = 0; i < selection.rangeCount; i++) {
-                    
+
                         var range = selection.getRangeAt(i);
-                        
+
                         chomp(range);
-                        
+
                         if (!range.isCollapsed) result.push(range);
-                                            
+
                     }
-                    
+
                     return result;
-                
+
                 }
-                
+
                 function getResourcePane() {
 
                     return top.frames[1].frames[0];
@@ -1211,11 +1207,11 @@
                 }
 
                 function isEmpty(string) {
-                
+
                     return /^\s*$/.test(string);
-                
+
                 }
-                
+
                 function isTextNode(node) {
 
                     return node.nodeType && node.nodeType === Node.TEXT_NODE;
@@ -1296,68 +1292,68 @@
 
                 // Public functions //40////////50////////60////////70////////80
                 this.apply = function(range, method, obj) {
-                
+
                     var from = getContentOffset(range),
                         len = getContentLength(range),
                         first = rawString.substring(from, from + 1);
-                        
+
                     if(first && isEmpty(first) ) from++;
-                            
+
                     if(!isEmpty(rawString.substring(from, from + len) ) ) {
-                    
+
                         return method.apply(obj, [from, from + len]);
-                        
+
                     } else {
-                    
+
                         return null;
-                    
+
                     }
-                
+
                 };
-                
+
                 this.batch = function(method, obj) {
-                
+
                     getRanges().forEach(function(range) {
-                    
+
                         BlockMarker.apply(range, method, obj);
-                    
+
                     });
-                
+
                 };
-                
+
                 this.batchTable = function() {
-                
+
                     var rows = new BlockArray();
-                
+
                     getRanges().forEach(function(range) {
-                    
+
                         var maybeTr = range.startContainer,
                             trRange = new Range();
-                            
+
                         if(maybeTr.nodeName.toLowerCase() === "tr") {
-                            
+
                             var block;
-                            
+
                             trRange.selectNode(maybeTr);
                             block = BlockMarker.apply(trRange,
                                 BlockMarker.createBlock, BlockMarker);
 
                             if(block) {
-                            
+
                                 rows.push(block);
                                 BlockMarker.apply(range,
                                     block.addHeading, block);
-                                    
+
                             }
-                                
+
                         }
-                    
+
                     });
-                    
+
                     rows.setAsList();
-                
+
                 };
-                                
+
                 this.changeMode = function(string) {
 
                     return top.location.href.
@@ -1366,25 +1362,25 @@
                 };
 
                 this.checkAll = function() {
-                
+
                     var body = getListPane().document.body;
-                    
+
                     jQuery("input[type='checkBox']", body).attr("checked", true);
-                
+
                 };
-                
+
                 this.createBlock = function(from, to) {
-                
+
                     return new Block(from, to, true);
-                
+
                 };
-                
+
                 this.getRootBlock = function() {
-                
+
                     return rootBlock;
-                
+
                 };
-                
+
                 this.initialize = function() {
 
                     switch(-1) {
@@ -1428,44 +1424,44 @@
                                 // console.log(rawString);
                                 getMenuPane().location.href =
                                     BlockMarker.changeMode("m");
-                                    
+
                                 getListPane().document.addEventListener
                                     ('keydown', function (e) {
-                                    
+
                                     switch(e.keyCode) {
-                                    
+
                                         case 76: // l -> Set as a list
                                         BlockMarker.setAsList();
                                         break;
-                                        
+
                                     }
-                                                                        
+
                                 });
-                                
+
                                 getResourcePane().document.addEventListener
                                     ('keydown', function (e) {
-                                    
+
                                     switch(e.keyCode) {
-                                    
+
                                         case 66: // b -> Mark new blocks
                                         BlockMarker.batch
                                             (BlockMarker.createBlock,
                                             BlockMarker);
                                         break;
-                                        
+
                                         case 72: // h -> Add headings
                                                  //      into the last block
                                         var target = BlockMarker.allBlocks
                                             [BlockMarker.allBlocks.length - 1];
-                                        
+
                                         BlockMarker.batch
                                             (target.addHeading, target);
                                         break;
-                                    
+
                                         case 84: // t -> Mark a flat table
                                         BlockMarker.batchTable();
                                         break;
-                                        
+
                                     }
 
                                 });
@@ -1487,42 +1483,42 @@
                 };
 
                 this.saveJSON = function(node) {
-                
+
                     if(!allBlocks.every(function(b){
                         // Check block w/o style
-                    
+
                         return (b === allBlocks[0]) || // Top-level.
                             !b.parent || // Already unlinked.
                             b.style !== undefined; // The style has been marked.
-                    
+
                     } ) ) {
-                    
+
                         raiseWarning("Please mark every list even if " +
                             "it is composed from only one block.");
-                            
+
                         return false;
-                    
-                    } else if(!allBlocks.every(function(b){ 
+
+                    } else if(!allBlocks.every(function(b){
                         // Check block w/o heading
-                    
+
                         return (b === allBlocks[0]) || // Top-level.
                             !b.parent || // Already unlinked.
                             (0 < b.headings.length); // The heading has been marked.
-                    
+
                     } ) ) {
-                    
+
                         raiseWarning("Please do not mark blocks " +
                             "without their headings.");
-                    
+
                         return false;
-                    
+
                     } else {
-                    
+
                         var document = getMenuPane().document,
                             hasMatter =
                                 document.getElementById("f_has_matter").checked,
-                            jsonObj = rootBlock.dumpJSON(), json, b64, fileName;
-                    
+                            jsonObj = rootBlock.dumpJSON(), json, blob, fileName;
+
                         if(hasMatter) {
 
                             jsonObj.hasMatter = hasMatter;
@@ -1538,38 +1534,38 @@
                             ["from", "to", "mandatory", "style", "headings",
                             "contents", "children", "rawString", "hasMatter",
                             "matter", "note"], "    ");
-                        b64 = base64.encode(json, 1);
+                        blob = new Blob([json], {type: "text/json"});
                         fileName = (matcher = top.location.href.
                             match(/&name=([^&]+)/) ) ? matcher[1] : "Unnamed";
                         jQuery(node).
-                            attr("href", "data:text/json;base64," + b64).
+                            attr("href", URL.createObjectURL(blob)).
                             attr("download", fileName);
                         jQuery(getResourcePane() ).off("beforeunload");
-                        
+
                         return true;
 
-                    }                       
-                    
+                    }
+
                 };
 
                 this.setAsList = function() {
-                
+
                     var i, checkBox,
                         document = getListPane().document,
                         blockArray = new BlockArray();
-                        
+
                     for(i = 0; i < allBlocks.length; i++) {
-                    
+
                         if( (checkBox = document.getElementById("check" + i) )
                             && checkBox.checked)
                             blockArray.push(allBlocks[i]);
-                    
+
                     }
-                    
+
                     if(0 < blockArray.length) blockArray.setAsList();
-                
+
                 }
-                
+
             }(top);
 
         </script>

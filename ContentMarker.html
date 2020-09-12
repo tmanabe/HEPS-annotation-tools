@@ -12,11 +12,7 @@
 
         </title>
 
-        <script src="http://www.dl.kuis.kyoto-u.ac.jp/~manabe/jquery-2.0.3.js">
-
-        </script>
-
-        <script src="http://www.dl.kuis.kyoto-u.ac.jp/~manabe/base64.js">
+        <script src="https://tmanabe.github.io/HEPS-annotation-tools/jquery.js">
 
         </script>
 
@@ -25,10 +21,10 @@
             //////20////////30////////40////////50////////60////////70////////80
 
             var ContentMarkerMode; // Global object
-            
+
             // http://stackoverflow.com/questions/710586/json-stringify-bizarreness
             delete Array.prototype.toJSON;
-    
+
             if(location.href.indexOf("?") < 0) {
 
                 location.href = location.href + "?mode=global";
@@ -117,7 +113,7 @@
                 function getContent(node, textOffset = 0, textLimit = null) {
 
                     var text;
-                    
+
                     // console.log(node);
 
                     switch(node.nodeName.toLowerCase() ) {
@@ -145,7 +141,7 @@
                 function getContentIn(range) {
 
                     var nodes = getNodesIn(range);
-                    
+
                     // console.log(nodes);
 
                     if(nodes.length === 1) {
@@ -230,7 +226,7 @@
                     var result = [], rawNodes, firstNode, lastNode, width, i;
 
                     // console.log(range);
-                    
+
                     result.context = range.commonAncestorContainer;
                     result.nodeTest = "./descendant-or-self::node()";
                     rawNodes = xPath(result.context, result.nodeTest);
@@ -260,7 +256,7 @@
                             [range.endOffset - 1], result.nodeTest).pop();
 
                     }
-                    
+
                     // console.log([firstNode, rawNodes]);
 
                     result.offset = rawNodes.indexOf(firstNode);
@@ -375,7 +371,7 @@
 
 
                 };
-                
+
                 this.mode = function(string) {
 
                     return top.location.href.
@@ -399,21 +395,21 @@
                                     "Are you sure?");
 
                             });
-                            
+
                             jQuery(getResourcePane() ).keydown(function(e) {
-                             
+
                                 switch(e.keyCode) {
-                                
+
                                     case 83: // s -> Save JSON
                                     ContentMarker.saveJSON();
                                     break;
-                                    
+
                                 }
-                             
+
                             });
 
                         });
-                        
+
                     }, 0); // Pass to load new location
 
                 };
@@ -456,7 +452,7 @@
 
                     if(hasMatter || 0 < xPathes.length) {
 
-                        var result = {}, json, b64, matcher, fileName;
+                        var result = {}, json, blob, matcher, fileName;
 
                         result.xPath = xPathes.join("|");
                         result.myRanges = myRanges;
@@ -479,11 +475,11 @@
                             ["xPath", "myRanges", "from", "to",
                             "fragmentStrings", "rawString", "rawSource",
                             "hasMatter", "matter", "note"], "    ");
-                        b64 = base64.encode(json, 1);
+                        blob = new Blob([json], {type: "text/json"});
                         fileName = (matcher = top.location.href.
                             match(/&name=([^&]+)/) ) ? matcher[1] : "Unnamed";
                         jQuery(node).
-                            attr("href", "data:text/json;base64," + b64).
+                            attr("href", URL.createObjectURL(blob)).
                             attr("download", fileName);
                         jQuery(getResourcePane() ).off("beforeunload");
                         ContentMarker.clearStack();
@@ -521,7 +517,7 @@
                     }
 
                 };
-                
+
             };
 
         </script>
@@ -540,7 +536,7 @@
             ContentMarker.openURLInit();
 
         }
-        
+
     </script>
 
     <body>

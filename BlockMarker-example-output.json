@@ -12,7 +12,7 @@
     "contents": [
         {
             "from": 0,
-            "to": 11096,
+            "to": 4435,
             "mandatory": true
         }
     ],
@@ -22,16 +22,16 @@
             "headings": [
                 [
                     {
-                        "from": 7136,
-                        "to": 7180,
+                        "from": 456,
+                        "to": 500,
                         "mandatory": true
                     }
                 ]
             ],
             "contents": [
                 {
-                    "from": 7136,
-                    "to": 8328,
+                    "from": 456,
+                    "to": 1667,
                     "mandatory": true
                 }
             ],
@@ -41,16 +41,16 @@
                     "headings": [
                         [
                             {
-                                "from": 7181,
-                                "to": 7227,
+                                "from": 501,
+                                "to": 547,
                                 "mandatory": true
                             }
                         ]
                     ],
                     "contents": [
                         {
-                            "from": 7181,
-                            "to": 7484,
+                            "from": 501,
+                            "to": 784,
                             "mandatory": true
                         }
                     ],
@@ -61,16 +61,16 @@
                     "headings": [
                         [
                             {
-                                "from": 7485,
-                                "to": 7507,
+                                "from": 824,
+                                "to": 846,
                                 "mandatory": true
                             }
                         ]
                     ],
                     "contents": [
                         {
-                            "from": 7485,
-                            "to": 7675,
+                            "from": 824,
+                            "to": 1014,
                             "mandatory": true
                         }
                     ],
@@ -81,16 +81,16 @@
                     "headings": [
                         [
                             {
-                                "from": 7676,
-                                "to": 7731,
+                                "from": 1015,
+                                "to": 1070,
                                 "mandatory": true
                             }
                         ]
                     ],
                     "contents": [
                         {
-                            "from": 7676,
-                            "to": 8281,
+                            "from": 1015,
+                            "to": 1620,
                             "mandatory": true
                         }
                     ],
@@ -103,16 +103,16 @@
             "headings": [
                 [
                     {
-                        "from": 8329,
-                        "to": 8343,
+                        "from": 1668,
+                        "to": 1682,
                         "mandatory": true
                     }
                 ]
             ],
             "contents": [
                 {
-                    "from": 8329,
-                    "to": 9255,
+                    "from": 1668,
+                    "to": 2594,
                     "mandatory": true
                 }
             ],
@@ -123,16 +123,16 @@
             "headings": [
                 [
                     {
-                        "from": 9256,
-                        "to": 9272,
+                        "from": 2595,
+                        "to": 2611,
                         "mandatory": true
                     }
                 ]
             ],
             "contents": [
                 {
-                    "from": 9256,
-                    "to": 11069,
+                    "from": 2595,
+                    "to": 4408,
                     "mandatory": true
                 }
             ],
@@ -143,22 +143,22 @@
             "headings": [
                 [
                     {
-                        "from": 11070,
-                        "to": 11075,
+                        "from": 4409,
+                        "to": 4414,
                         "mandatory": true
                     }
                 ]
             ],
             "contents": [
                 {
-                    "from": 11070,
-                    "to": 11096,
+                    "from": 4409,
+                    "to": 4435,
                     "mandatory": true
                 }
             ],
             "children": []
         }
     ],
-    "rawString": "Tomohiro Manabe <IMG: data:image/png;base64,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> Yahoo Japan Corporation Kioi Tower, Tokyo Garden Terrace Kioicho, 1-3 Kioicho, Chiyodaku, Tokyo 102-8282 Japan Doctor of Informatics in Social Informatics ( Kyoto University , 2016) Master of Informatics in Social Informatics ( Kyoto University , 2013) Bachelor of Engineering in Informatics and Mathematical Science ( Kyoto University , 2011) Member of the Database Society of Japan Member of Tokyo ACM SIGIR Chapter Research Interests and Selected Publications Logical structure of tree-structured documents Tomohiro Manabe and Keishi Tajima. Extracting Logical Hierarchical Structure of HTML Documents Based on Headings . The Proceedings of the VLDB Endowment , vol. 8, no. 12, pp. 1606-1617, August 2015. Reference implementation , data set , slides , and poster Block-based web search Tomohiro Manabe and Keishi Tajima. Heading-Aware Proximity Measure and Its Application to Web Search . DBSJ Journal , vol. 14, article no. 2, March 2016. System output Effective and efficient evaluation of document rankings Tomohiro Manabe , Akiomi Nishida, Makoto P. Kato, Takehiro Yamamoto, and Sumio Fujita. A Comparative Live Evaluation of Multileaving Methods on a Commercial cQA Search. In SIGIR , pp. 949-952, 2017. Details (on Yahoo! Japan Research, including a link to the full text) Reference implementation Makoto P. Kato, Tomohiro Manabe , Sumio Fujita, Akiomi Nishida, and Takehiro Yamamoto. Challenges of Multileaved Comparison in Practice: Lessons from NTCIR-13 OpenLiveQ Task. In CIKM , pp. 1515-1518, 2018. CIKM 2018 TOC (including a link to the full text) All publications in English / All publications Career Summary 2004. 4. 1 - 2007. 3. 1 : Student in the general education curriculum of Tokushima Prefectural Joto Senior High School 2007. 4. 1 - 2011. 3.24 : Student of Undergraduate School of Informatics and Mathematical Science of Faculty of Engineering of Kyoto University 2008. 4. 1 - 2011. 3.24 : Student in Computer Science Course of the same school 2010. 4. 9 - 2016. 3.23 : Member of Digital Library Group (or Tanaka Laboratory or Tanaka and Tajima Laboratory) in Social Information Model Division of Department of Social Informatics of Graduate School of Informatics of Kyoto University 2010. 4.12 - 2016. 3. 9 : Advised by Prof. Keishi Tajima 2011. 4. 1 - 2013. 3.23 : Master course student of the same dept. 2013. 4. 1 - 2016. 3.23 : Doctoral student of the same dept. 2013. 4. 1 - 2016. 3.31 : Research fellow (DC1) of the Japan Society for the Promotion of Science 2016. 4. 1 - current : Yahoo Japan Corporation Other Activities 2007. 4.28 - 2009.12.19 : Member of Yukidaruma-pro , an official filmmaking circle of Kyoto University YouTube: yukidarumapro - YouTube 2011. 8.25 - 2011.9.20 : Intern at former Cyber Solution Laboratory of Nippon Telegraph and Telephone Corporation Theme: Information extraction from web contents 2011. 9.27 - 2011.9.29 : Student of Kyoto University Summer Design School 2011 Theme: Designing an HTML editor - not for the image conscious 2011.10. 4 - 2012. 1.31 : Teaching assistant of Hardware and Software Laboratory Project 2 , a course of Faculty of Engineering of Kyoto University 2012. 5 - 2012. 9 : Staff of Kyoto University Summer Design School 2012 2012.10. 2 - 2013. 1.23 : Teaching assistant of Hardware and Software Laboratory Project 2 , a course of Faculty of Engineering of Kyoto University 2013. 3.11 - 2016. 3.31 : Student member of the Database Society of Japan 2013. 6.28 - 2016. 3.31 : Obtained JSPS KAKENHI (Grants-in-Aid for JSPS Fellows), 3,300,000 yen in total Research Project: A Study on Block-Level Web Search (Grant Number: 13J06384) 2014. 3.15 - 2014. 3.16 : Guest lecturer of Digital Design Workshop at Kyoto University Spring Design School 2014 2016. 4. 1 - current : Member of the Database Society of Japan 2016. 5.17 : TOEIC IP score 830 2016. 7.20 : Linux Professional Institute Certified Level 1 2016. 8 - 2017.12 : Organizer of the NTCIR-13 OpenLiveQ task 2018. 2 - 2018. 7 : Program Committee member for Short Papers on Applications of IR for ACM SIGIR 2018 2018. 2.24 - current : Member of Tokyo ACM SIGIR Chapter 2018. 3 - 2019. 6 : Organizer of the NTCIR-14 OpenLiveQ-2 task 2019. 8 - 2019. 9 : Program Committee member for the Post-Conference Proceedings of NTCIR-14 2020. 2 - 2020. 7 : Program Committee member of the Short Paper Track of ACM SIGIR 2020 Links DBLP GitHub Facebook",
+    "rawString": "Tomohiro Manabe <IMG: /something.png> Yahoo Japan Corporation Kioi Tower, Tokyo Garden Terrace Kioicho, 1-3 Kioicho, Chiyodaku, Tokyo 102-8282 Japan Doctor of Informatics in Social Informatics ( Kyoto University , 2016) Master of Informatics in Social Informatics ( Kyoto University , 2013) Bachelor of Engineering in Informatics and Mathematical Science ( Kyoto University , 2011) Member of the Database Society of Japan Member of Tokyo ACM SIGIR Chapter Research Interests and Selected Publications Logical structure of tree-structured documents Tomohiro Manabe and Keishi Tajima. Extracting Logical Hierarchical Structure of HTML Documents Based on Headings . The Proceedings of the VLDB Endowment , vol. 8, no. 12, pp. 1606-1617, August 2015. Reference implementation , data set , annotation tools , slides , and poster Block-based web search Tomohiro Manabe and Keishi Tajima. Heading-Aware Proximity Measure and Its Application to Web Search . DBSJ Journal , vol. 14, article no. 2, March 2016. System output Effective and efficient evaluation of document rankings Tomohiro Manabe , Akiomi Nishida, Makoto P. Kato, Takehiro Yamamoto, and Sumio Fujita. A Comparative Live Evaluation of Multileaving Methods on a Commercial cQA Search. In SIGIR , pp. 949-952, 2017. Details (on Yahoo! Japan Research, including a link to the full text) Reference implementation Makoto P. Kato, Tomohiro Manabe , Sumio Fujita, Akiomi Nishida, and Takehiro Yamamoto. Challenges of Multileaved Comparison in Practice: Lessons from NTCIR-13 OpenLiveQ Task. In CIKM , pp. 1515-1518, 2018. CIKM 2018 TOC (including a link to the full text) All publications in English / All publications Career Summary 2004. 4. 1 - 2007. 3. 1 : Student in the general education curriculum of Tokushima Prefectural Joto Senior High School 2007. 4. 1 - 2011. 3.24 : Student of Undergraduate School of Informatics and Mathematical Science of Faculty of Engineering of Kyoto University 2008. 4. 1 - 2011. 3.24 : Student in Computer Science Course of the same school 2010. 4. 9 - 2016. 3.23 : Member of Digital Library Group (or Tanaka Laboratory or Tanaka and Tajima Laboratory) in Social Information Model Division of Department of Social Informatics of Graduate School of Informatics of Kyoto University 2010. 4.12 - 2016. 3. 9 : Advised by Prof. Keishi Tajima 2011. 4. 1 - 2013. 3.23 : Master course student of the same dept. 2013. 4. 1 - 2016. 3.23 : Doctoral student of the same dept. 2013. 4. 1 - 2016. 3.31 : Research fellow (DC1) of the Japan Society for the Promotion of Science 2016. 4. 1 - current : Yahoo Japan Corporation Other Activities 2007. 4.28 - 2009.12.19 : Member of Yukidaruma-pro , an official filmmaking circle of Kyoto University YouTube: yukidarumapro - YouTube 2011. 8.25 - 2011.9.20 : Intern at former Cyber Solution Laboratory of Nippon Telegraph and Telephone Corporation Theme: Information extraction from web contents 2011. 9.27 - 2011.9.29 : Student of Kyoto University Summer Design School 2011 Theme: Designing an HTML editor - not for the image conscious 2011.10. 4 - 2012. 1.31 : Teaching assistant of Hardware and Software Laboratory Project 2 , a course of Faculty of Engineering of Kyoto University 2012. 5 - 2012. 9 : Staff of Kyoto University Summer Design School 2012 2012.10. 2 - 2013. 1.23 : Teaching assistant of Hardware and Software Laboratory Project 2 , a course of Faculty of Engineering of Kyoto University 2013. 3.11 - 2016. 3.31 : Student member of the Database Society of Japan 2013. 6.28 - 2016. 3.31 : Obtained JSPS KAKENHI (Grants-in-Aid for JSPS Fellows), 3,300,000 yen in total Research Project: A Study on Block-Level Web Search (Grant Number: 13J06384) 2014. 3.15 - 2014. 3.16 : Guest lecturer of Digital Design Workshop at Kyoto University Spring Design School 2014 2016. 4. 1 - current : Member of the Database Society of Japan 2016. 5.17 : TOEIC IP score 830 2016. 7.20 : Linux Professional Institute Certified Level 1 2016. 8 - 2017.12 : Organizer of the NTCIR-13 OpenLiveQ task 2018. 2 - 2018. 7 : Program Committee member for Short Papers on Applications of IR for ACM SIGIR 2018 2018. 2.24 - current : Member of Tokyo ACM SIGIR Chapter 2018. 3 - 2019. 6 : Organizer of the NTCIR-14 OpenLiveQ-2 task 2019. 8 - 2019. 9 : Program Committee member for the Post-Conference Proceedings of NTCIR-14 2020. 2 - 2020. 7 : Program Committee member of the Short Paper Track of ACM SIGIR 2020 Links DBLP GitHub Facebook",
     "note": ""
 }

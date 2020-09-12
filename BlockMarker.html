@@ -548,13 +548,13 @@
                     result += "<small>"
                     result += "<a href='#' onclick='" +
                         ptrB + ".remove();" +
-                        "return false;'>[削除]</a>\n";
+                        "return false;'>[Remove]</a>\n";
                     result += dumpAnchorHTML("BlockMarker.batch",
-                        ptrB + ".addContent", ptrB, "内容の追加");
+                        ptrB + ".addContent", ptrB, "Add Content");
                     result += dumpAnchorHTML("BlockMarker.batch",
-                        ptrB + ".addTransition", ptrB, "トランジションの追加");
+                        ptrB + ".addTransition", ptrB, "Add Transition");
                     result += dumpAnchorHTML("BlockMarker.batch",
-                        ptrB + ".addHeading", ptrB, "見出しの追加");
+                        ptrB + ".addHeading", ptrB, "Add Heading");
                     result += "</small><br />";
 
                     result += this.contents.map(function(range) {
@@ -577,11 +577,11 @@
                         result = "<li><small>"
                         result += "<a href='#' onclick='" +
                             ptrB + ".removeHeading" + "(" + ptrA + ");" +
-                            "return false;'>[見出しを削除]</a> ";
+                            "return false;'>[Remove Heading]</a> ";
                         result += dumpAnchorHTML("BlockMarker.batch",
-                            ptrA + ".addHeadRange", ptrA, "見出しの内容の追加");
+                            ptrA + ".addHeadRange", ptrA, "Add Heading-Content");
                         result += dumpAnchorHTML("BlockMarker.batch",
-                            ptrA + ".addTransRange", ptrA, "見出しのトランジションの追加");
+                            ptrA + ".addTransRange", ptrA, "Add Heading-Transition");
                         result += "</small><br />";
                         result += array.map(function(range) {
 
